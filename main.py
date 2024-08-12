@@ -92,7 +92,6 @@ def main():
         response = requests.post('https://model-backend-m5jp.onrender.com/predict', json={'candidate_data': candidate_data})
         result = response.json()
         candidate_name = candidate_data["Full Name"]
-
         st.write("Detailed Scores:")
         for category, score in result['scores'].items():
             st.write(f"{category} score: {score}")
