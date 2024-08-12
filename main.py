@@ -1,0 +1,106 @@
+import streamlit as st
+import requests
+import json
+
+
+def main():
+    st.title("Candidate Evaluation Dashboard")
+
+    # File uploader widget
+    uploaded_file = st.file_uploader("Upload a JSON file with candidate data", type=["json"])
+
+    candidate_data = {}
+    if uploaded_file is not None:
+        # Read the file and parse the JSON data
+        file_contents = uploaded_file.read()
+        candidate_data = json.loads(file_contents)
+
+    # Input fields
+    candidate_data['Full Name'] = st.text_input("Full Name", value=candidate_data.get("Full Name", ""))
+    candidate_data['DOB'] = st.text_input("Date of Birth", value=candidate_data.get("DOB", ""))
+    candidate_data['Gender'] = st.selectbox("Gender", ["Male", "Female"],
+                                            index=["Male", "Female"].index(candidate_data.get("Gender", "Male")))
+    candidate_data['Nationality'] = st.text_input("Nationality", value=candidate_data.get("Nationality", ""))
+    candidate_data['Languages Preferred'] = st.text_input("Languages Preferred (comma-separated)", value=", ".join(
+        candidate_data.get("Languages Preferred", [])))
+    candidate_data['Phone Number'] = st.text_input("Phone Number", value=candidate_data.get("Phone Number", ""))
+    candidate_data['Email Address'] = st.text_input("Email Address", value=candidate_data.get("Email Address", ""))
+    candidate_data['Permanent Address'] = st.text_input("Permanent Address",
+                                                        value=candidate_data.get("Permanent Address", ""))
+    candidate_data['Religion'] = st.text_input("Religion", value=candidate_data.get("Religion", ""))
+    candidate_data['Caste/Community'] = st.text_input("Caste/Community",
+                                                      value=candidate_data.get("Caste/Community", ""))
+    candidate_data['Ethnicity'] = st.text_input("Ethnicity", value=candidate_data.get("Ethnicity", ""))
+    candidate_data['Education Level'] = st.text_input("Education Level",
+                                                      value=candidate_data.get("Education Level", ""))
+    candidate_data['Previous Occupations'] = st.text_input("Previous Occupations (comma-separated)", value=", ".join(
+        candidate_data.get("Previous Occupations", [])))
+    candidate_data['Political Base'] = st.text_input("Political Base", value=candidate_data.get("Political Base", ""))
+    candidate_data['Highest Degree Obtained'] = st.text_input("Highest Degree Obtained",
+                                                              value=candidate_data.get("Highest Degree Obtained", ""))
+    candidate_data['Field of Study'] = st.text_input("Field of Study", value=candidate_data.get("Field of Study", ""))
+    candidate_data['Educational Institutions Attended'] = st.text_input(
+        "Educational Institutions Attended (comma-separated)",
+        value=", ".join(candidate_data.get("Educational Institutions Attended", [])))
+    candidate_data['Certifications/Other Qualifications'] = st.text_input(
+        "Certifications/Other Qualifications (comma-separated)",
+        value=", ".join(candidate_data.get("Certifications/Other Qualifications", [])))
+    candidate_data['Current Occupation'] = st.text_input("Current Occupation",
+                                                         value=candidate_data.get("Current Occupation", ""))
+    candidate_data['Years of Experience in Leadership'] = st.text_input("Years of Experience in Leadership",
+                                                                        value=candidate_data.get(
+                                                                            "Years of Experience in Leadership", ""))
+    candidate_data['Political Party Affiliation'] = st.text_input("Political Party Affiliation",
+                                                                  value=candidate_data.get(
+                                                                      "Political Party Affiliation", ""))
+    candidate_data['Previous Political Positions Held'] = st.text_input(
+        "Previous Political Positions Held (comma-separated)",
+        value=", ".join(candidate_data.get("Previous Political Positions Held", [])))
+    candidate_data['Major Political Achievements'] = st.text_input("Major Political Achievements (comma-separated)",
+                                                                   value=", ".join(candidate_data.get(
+                                                                       "Major Political Achievements", [])))
+    candidate_data['Political Ideology/Core Belief'] = st.text_input("Political Ideology/Core Belief (comma-separated)",
+                                                                     value=", ".join(candidate_data.get(
+                                                                         "Political Ideology/Core Belief", [])))
+    candidate_data['Political Movements Involvement'] = st.text_input(
+        "Political Movements Involvement (comma-separated)",
+        value=", ".join(candidate_data.get("Political Movements Involvement", [])))
+    candidate_data['Key Areas of Focus'] = st.text_input("Key Areas of Focus (comma-separated)",
+                                                         value=", ".join(candidate_data.get("Key Areas of Focus", [])))
+    candidate_data['Primary Vision for the Country/Region'] = st.text_input(
+        "Primary Vision for the Country/Region (comma-separated)",
+        value=", ".join(candidate_data.get("Primary Vision for the Country/Region", [])))
+    candidate_data['Short-term Goals'] = st.text_input("Short-term Goals (comma-separated)",
+                                                       value=", ".join(candidate_data.get("Short-term Goals", [])))
+    candidate_data['Long-term Goals'] = st.text_input("Long-term Goals (comma-separated)",
+                                                      value=", ".join(candidate_data.get("Long-term Goals", [])))
+    candidate_data['Involvement in Social/Community Projects'] = st.text_input(
+        "Involvement in Social/Community Projects (comma-separated)",
+        value=", ".join(candidate_data.get("Involvement in Social/Community Projects", [])))
+    candidate_data['Awards and Recognitions'] = st.text_input("Awards and Recognitions (comma-separated)",
+                                                              value=", ".join(
+                                                                  candidate_data.get("Awards and Recognitions", [])))
+    candidate_data['Twitter'] = st.text_input("Twitter Handle", value=candidate_data.get("Twitter", ""))
+    candidate_data['Facebook'] = st.text_input("Facebook Handle", value=candidate_data.get("Facebook", ""))
+    candidate_data['Instagram'] = st.text_input("Instagram Handle", value=candidate_data.get("Instagram", ""))
+    candidate_data['Other Social Media Handles'] = st.text_input("Other Social Media Handles (comma-separated)",
+                                                                 value=", ".join(
+                                                                     candidate_data.get("Other Social Media Handles",
+                                                                                        [])))
+
+    if st.button("Submit"):
+        response = requests.post('https://model-backend-m5jp.onrender.com/predict', json={'candidate_data': candidate_data})
+        result = response.json()
+        candidate_name = candidate_data["Full Name"]
+
+        st.write("Detailed Scores:")
+        for category, score in result['scores'].items():
+            st.write(f"{category} score: {score}")
+
+        st.write(f"Demographic Alignment Score (Colombo): {result['demographic_alignment_score']}")
+        st.write(f"Community Engagement Score (Colombo): {result['community_engagement_score']}")
+        st.write(f"Support Index for {candidate_name}: {result['support_index']:.2f}")
+
+
+if __name__ == "__main__":
+    main()
