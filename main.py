@@ -1,19 +1,58 @@
 import streamlit as st
+import pandas as pd
 import requests
-import json
 
 
 def main():
     st.title("Candidate Evaluation Dashboard")
 
     # File uploader widget
-    uploaded_file = st.file_uploader("Upload a JSON file with candidate data", type=["json"])
+    uploaded_file = st.file_uploader("Upload a CSV file with candidate data", type=["csv"])
 
     candidate_data = {}
     if uploaded_file is not None:
-        # Read the file and parse the JSON data
-        file_contents = uploaded_file.read()
-        candidate_data = json.loads(file_contents)
+        # Read the CSV file without headers
+        df = pd.read_csv(uploaded_file, header=None)
+
+        # Ensure there are enough rows in the CSV
+        if df.shape[0] >= 30:
+            # Extract values from the second column
+            values = df[1].tolist()
+
+            # Map CSV values to form fields
+            form_fields = [
+                'Full Name', 'DOB', 'Gender', 'Nationality', 'Languages Preferred',
+                'Phone Number', 'Email Address', 'Permanent Address', 'Religion',
+                'Caste/Community', 'Ethnicity', 'Education Level', 'Previous Occupations',
+                'Political Base', 'Highest Degree Obtained', 'Field of Study',
+                'Educational Institutions Attended', 'Certifications/Other Qualifications',
+                'Current Occupation', 'Years of Experience in Leadership',
+                'Political Party Affiliation', 'Previous Political Positions Held',
+                'Major Political Achievements', 'Political Ideology/Core Belief',
+                'Political Movements Involvement', 'Key Areas of Focus',
+                'Primary Vision for the Country/Region', 'Short-term Goals',
+                'Long-term Goals', 'Involvement in Social/Community Projects',
+                'Awards and Recognitions', 'Twitter', 'Facebook', 'Instagram',
+                'Other Social Media Handles'
+            ]
+
+            if len(values) >= len(form_fields):
+                # Populate candidate_data
+                for field, value in zip(form_fields, values):
+                    candidate_data[field] = value
+
+                # Ensure multi-value fields are properly split
+                multi_value_fields = [
+                    'Languages Preferred', 'Previous Occupations', 'Educational Institutions Attended',
+                    'Certifications/Other Qualifications', 'Previous Political Positions Held',
+                    'Major Political Achievements', 'Political Ideology/Core Belief',
+                    'Political Movements Involvement', 'Key Areas of Focus',
+                    'Primary Vision for the Country/Region', 'Short-term Goals', 'Long-term Goals',
+                    'Involvement in Social/Community Projects', 'Awards and Recognitions', 'Other Social Media Handles'
+                ]
+                for field in multi_value_fields:
+                    if field in candidate_data:
+                        candidate_data[field] = candidate_data[field].split(", ")
 
     # Input fields
     candidate_data['Full Name'] = st.text_input("Full Name", value=candidate_data.get("Full Name", ""))
@@ -21,8 +60,9 @@ def main():
     candidate_data['Gender'] = st.selectbox("Gender", ["Male", "Female"],
                                             index=["Male", "Female"].index(candidate_data.get("Gender", "Male")))
     candidate_data['Nationality'] = st.text_input("Nationality", value=candidate_data.get("Nationality", ""))
-    candidate_data['Languages Preferred'] = st.text_input("Languages Preferred (comma-separated)", value=", ".join(
-        candidate_data.get("Languages Preferred", [])))
+    candidate_data['Languages Preferred'] = st.text_input("Languages Preferred (comma-separated)",
+                                                          value=", ".join(
+                                                              candidate_data.get("Languages Preferred", [])))
     candidate_data['Phone Number'] = st.text_input("Phone Number", value=candidate_data.get("Phone Number", ""))
     candidate_data['Email Address'] = st.text_input("Email Address", value=candidate_data.get("Email Address", ""))
     candidate_data['Permanent Address'] = st.text_input("Permanent Address",
@@ -33,8 +73,9 @@ def main():
     candidate_data['Ethnicity'] = st.text_input("Ethnicity", value=candidate_data.get("Ethnicity", ""))
     candidate_data['Education Level'] = st.text_input("Education Level",
                                                       value=candidate_data.get("Education Level", ""))
-    candidate_data['Previous Occupations'] = st.text_input("Previous Occupations (comma-separated)", value=", ".join(
-        candidate_data.get("Previous Occupations", [])))
+    candidate_data['Previous Occupations'] = st.text_input("Previous Occupations (comma-separated)",
+                                                           value=", ".join(
+                                                               candidate_data.get("Previous Occupations", [])))
     candidate_data['Political Base'] = st.text_input("Political Base", value=candidate_data.get("Political Base", ""))
     candidate_data['Highest Degree Obtained'] = st.text_input("Highest Degree Obtained",
                                                               value=candidate_data.get("Highest Degree Obtained", ""))
@@ -89,17 +130,11 @@ def main():
                                                                                         [])))
 
     if st.button("Submit"):
-        response = requests.post('https://model-backend-m5jp.onrender.com/predict', json={'candidate_data': candidate_data})
+        response = requests.post('http://127.0.0.1:5000/predict', json={'candidate_data': candidate_data})
         result = response.json()
-        candidate_name = candidate_data["Full Name"]
-        st.write("Detailed Scores:")
-        for category, score in result['scores'].items():
-            st.write(f"{category} score: {score}")
 
-        st.write(f"Demographic Alignment Score (Colombo): {result['demographic_alignment_score']}")
-        st.write(f"Community Engagement Score (Colombo): {result['community_engagement_score']}")
-        st.write(f"Support Index for {candidate_name}: {result['support_index']:.2f}")
-
+        st.write("Division Scores:")
+        st.json(result)  # Display the entire JSON result
 
 if __name__ == "__main__":
     main()
