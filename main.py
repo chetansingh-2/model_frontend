@@ -130,7 +130,7 @@ def main():
                                                                                         [])))
 
     if st.button("Submit"):
-        response = requests.post('http://127.0.0.1:5000/predict', json={'candidate_data': candidate_data})
+        response = requests.post('https://model-backend-m5jp.onrender.com/predict', json={'candidate_data': candidate_data})
         result = response.json()
 
         st.write("Division Scores:")
